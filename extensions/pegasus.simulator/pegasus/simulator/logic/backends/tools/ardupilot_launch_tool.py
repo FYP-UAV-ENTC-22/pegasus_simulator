@@ -74,14 +74,24 @@ class ArduPilotLaunchTool:
             "--out", f"udp:127.0.0.1:{14550 + self.vehicle_id * 10}",
         ]
         command: str = " ".join(command)
-        
+
+        # Isaac Sim's bundled Python (3.11) leaks its interpreter via PYTHONHOME/PYTHONPATH
+        # (and Isaac libs via LD_LIBRARY_PATH). gnome-terminal and sim_vehicle.py are system
+        # Python 3.12 scripts, so inheriting those vars causes an "SRE module mismatch" crash.
+        # Strip them so the spawned terminal runs under the system Python environment.
+        clean_env = {
+            k: v for k, v in self.environment.items()
+            if k not in ("PYTHONHOME", "PYTHONPATH", "PYTHONEXECUTABLE",
+                         "PYTHONSTARTUP", "LD_LIBRARY_PATH", "LD_PRELOAD")
+        }
+
         # Run in a seperate bash window
         self.ardupilot_process = subprocess.Popen(
             # ["gnome-terminal", '--disable-factory', '--', 'bash', '-c', command],
             ["gnome-terminal", '--', 'bash', '-c', command],
             cwd=self.root_fs.name,
             shell=False,
-            env=self.environment,
+            env=clean_env,
             preexec_fn=os.setsid
         )
 
