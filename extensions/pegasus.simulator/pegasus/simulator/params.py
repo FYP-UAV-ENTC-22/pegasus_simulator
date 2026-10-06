@@ -34,7 +34,12 @@ ROBOTS = {
 } #, "Flying Cube": ROBOTS_ASSETS + "/iris_cube.usda"}
 
 # Setup the default simulation environments path
-NVIDIA_ASSETS_PATH = str(nucleus.get_assets_root_path())
+# Optional: without a reachable asset root the NVIDIA environments are just not listed
+try:
+    NVIDIA_ASSETS_PATH = str(nucleus.get_assets_root_path())
+except RuntimeError as e:
+    print(f"[Pegasus] NVIDIA environments unavailable: {e}")
+    NVIDIA_ASSETS_PATH = None
 ISAAC_SIM_ENVIRONMENTS = "/Isaac/Environments"
 NVIDIA_SIMULATION_ENVIRONMENTS = {
     "Default Environment": "Grid/default_environment.usd",
@@ -65,7 +70,7 @@ PEGASUS_ENVIRONMENTS = {
 SIMULATION_ENVIRONMENTS = {}
 
 # Add the Isaac Sim assets to the list
-for asset in NVIDIA_SIMULATION_ENVIRONMENTS:
+for asset in NVIDIA_SIMULATION_ENVIRONMENTS if NVIDIA_ASSETS_PATH else []:
     SIMULATION_ENVIRONMENTS[asset] = (
         NVIDIA_ASSETS_PATH + ISAAC_SIM_ENVIRONMENTS + "/" + NVIDIA_SIMULATION_ENVIRONMENTS[asset]
     )
